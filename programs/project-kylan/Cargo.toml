@@ -1,0 +1,21 @@
+[package]
+name = "project-kylan"
+version = "0.1.0"
+description = "To define an universal stable token for Solana."
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "project_kylan"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.21.0", features = ["init-if-needed"] }
+anchor-spl = { version = "0.21.0", features = ["default"] }
+num-traits = "0.2.14"
