@@ -7,7 +7,7 @@ pub use schema::*;
 pub mod instructions;
 pub use instructions::*;
 
-declare_id!("EnVMBC7rTA5kPfJi3Y5wUN95918ajCAwGzzamqePfi7e");
+declare_id!("57bCSmBzSiVyZEDb8n8W33tyxAcqDCcVnkb1eJ2jfnmP");
 
 #[program]
 mod project_kylan {

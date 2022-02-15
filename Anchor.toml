@@ -1,7 +1,7 @@
 [features]
 seeds = false
 [programs.localnet]
-project_kylan = "EnVMBC7rTA5kPfJi3Y5wUN95918ajCAwGzzamqePfi7e"
+project_kylan = "57bCSmBzSiVyZEDb8n8W33tyxAcqDCcVnkb1eJ2jfnmP"
 
 [registry]
 url = "https://anchor.projectserum.com"
