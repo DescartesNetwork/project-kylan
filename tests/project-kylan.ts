@@ -30,7 +30,7 @@ describe('project-kylan', () => {
   setProvider(provider)
   // Build needed accounts
   let splProgram: Program<SplToken>,
-    senProgram: Program<ProjectKylan>,
+    kylanProgram: Program<ProjectKylan>,
     stableToken: web3.Keypair,
     secureToken: web3.Keypair,
     cert: web3.PublicKey,
@@ -40,7 +40,7 @@ describe('project-kylan', () => {
     stableAssociatedTokenAccount: web3.PublicKey,
     secureAssociatedTokenAccount: web3.PublicKey
   before(async () => {
-    senProgram = workspace.ProjectKylan
+    kylanProgram = workspace.ProjectKylan
     splProgram = Spl.token()
     stableToken = web3.Keypair.generate()
     secureToken = web3.Keypair.generate()
@@ -48,11 +48,11 @@ describe('project-kylan', () => {
     cert = await findCert(
       printer.publicKey,
       secureToken.publicKey,
-      senProgram.programId,
+      kylanProgram.programId,
     )
     const [treasurerPublicKey] = await web3.PublicKey.findProgramAddress(
       [stableToken.publicKey.toBuffer()],
-      senProgram.programId,
+      kylanProgram.programId,
     )
     treasurer = treasurerPublicKey
     treasury = await utils.token.associatedAddress({
@@ -92,10 +92,9 @@ describe('project-kylan', () => {
   })
 
   it('initialize a printer', async () => {
-    await senProgram.rpc.initializePrinter(9, {
+    await kylanProgram.rpc.initializePrinter(9, {
       accounts: {
         stableToken: stableToken.publicKey,
-        secureToken: secureToken.publicKey,
         authority: provider.wallet.publicKey,
         systemProgram: web3.SystemProgram.programId,
         rent: web3.SYSVAR_RENT_PUBKEY,
@@ -113,7 +112,7 @@ describe('project-kylan', () => {
   })
 
   it('initialize a cert', async () => {
-    await senProgram.rpc.initializeCert(NUMERATOR_RATE, DENOMINATOR_RATE, {
+    await kylanProgram.rpc.initializeCert(NUMERATOR_RATE, DENOMINATOR_RATE, {
       accounts: {
         stableToken: stableToken.publicKey,
         secureToken: secureToken.publicKey,
@@ -123,16 +122,15 @@ describe('project-kylan', () => {
         systemProgram: web3.SystemProgram.programId,
         rent: web3.SYSVAR_RENT_PUBKEY,
       },
-      signers: [],
     })
-    const { printer: printerPublicKey } = await senProgram.account.cert.fetch(
+    const { printer: printerPublicKey } = await kylanProgram.account.cert.fetch(
       cert,
     )
     console.log('\tPrinter:', printerPublicKey.toBase58())
   })
 
   it('print #1', async () => {
-    await senProgram.rpc.print(new BN(10_000_000_000), {
+    await kylanProgram.rpc.print(new BN(10_000_000_000), {
       accounts: {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
@@ -148,7 +146,6 @@ describe('project-kylan', () => {
         cert,
         printer: printer.publicKey,
       },
-      signers: [],
     })
     // Fix incorrect spl idl
     const { amount: secureAmount } = await (
@@ -162,7 +159,7 @@ describe('project-kylan', () => {
   })
 
   it('print #2', async () => {
-    await senProgram.rpc.print(new BN(10_000_000_000), {
+    await kylanProgram.rpc.print(new BN(10_000_000_000), {
       accounts: {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
@@ -178,7 +175,6 @@ describe('project-kylan', () => {
         cert,
         printer: printer.publicKey,
       },
-      signers: [],
     })
     // Fix incorrect spl idl
     const { amount: secureAmount } = await (
@@ -200,7 +196,7 @@ describe('project-kylan', () => {
   })
 
   it('burn #1', async () => {
-    await senProgram.rpc.burn(new BN(500_000_000), {
+    await kylanProgram.rpc.burn(new BN(500_000_000), {
       accounts: {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
@@ -216,7 +212,6 @@ describe('project-kylan', () => {
         cert,
         printer: printer.publicKey,
       },
-      signers: [],
     })
     // Fix incorrect spl idl
     const { amount: secureAmount } = await (
@@ -230,7 +225,7 @@ describe('project-kylan', () => {
   })
 
   it('burn #2', async () => {
-    await senProgram.rpc.burn(new BN(500_000_000), {
+    await kylanProgram.rpc.burn(new BN(500_000_000), {
       accounts: {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
@@ -246,7 +241,6 @@ describe('project-kylan', () => {
         cert,
         printer: printer.publicKey,
       },
-      signers: [],
     })
     // Fix incorrect spl idl
     const { amount: secureAmount } = await (
@@ -260,10 +254,10 @@ describe('project-kylan', () => {
   })
 
   it('set cert state to paused', async () => {
-    const { state: prevState } = await senProgram.account.cert.fetch(cert)
+    const { state: prevState } = await kylanProgram.account.cert.fetch(cert)
     console.log('\tPrev State:', prevState)
     const state = CertState.PrintOnly
-    await senProgram.rpc.setCertState(state, {
+    await kylanProgram.rpc.setCertState(state, {
       accounts: {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
@@ -272,13 +266,13 @@ describe('project-kylan', () => {
         cert,
       },
     })
-    const { state: nextState } = await senProgram.account.cert.fetch(cert)
+    const { state: nextState } = await kylanProgram.account.cert.fetch(cert)
     console.log('\tNext State:', nextState)
   })
 
   it('failed to burn when print-only', async () => {
     try {
-      await senProgram.rpc.burn(new BN(500_000_000), {
+      await kylanProgram.rpc.burn(new BN(500_000_000), {
         accounts: {
           secureToken: secureToken.publicKey,
           stableToken: stableToken.publicKey,
@@ -294,10 +288,9 @@ describe('project-kylan', () => {
           cert,
           printer: printer.publicKey,
         },
-        signers: [],
       })
     } catch (er) {
-      const errors = senProgram.idl.errors.map(
+      const errors = kylanProgram.idl.errors.map(
         ({ code, msg }) => `${code}: ${msg}`,
       )
       if (!errors.includes(er.message))

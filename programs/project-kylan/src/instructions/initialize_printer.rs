@@ -13,8 +13,6 @@ pub struct InitializeStableToken<'info> {
     mint::freeze_authority = treasurer)]
   pub stable_token: Account<'info, token::Mint>,
   #[account(mut)]
-  pub secure_token: Account<'info, token::Mint>,
-  #[account(mut)]
   pub authority: Signer<'info>,
   #[account(seeds = [&stable_token.key().to_bytes()], bump)]
   pub treasurer: AccountInfo<'info>,
