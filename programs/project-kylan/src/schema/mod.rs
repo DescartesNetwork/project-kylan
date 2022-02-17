@@ -1,5 +1,8 @@
+pub mod printer;
+pub use printer::*;
+
 pub mod cert;
 pub use cert::*;
 
-pub mod printer;
-pub use printer::*;
+pub mod cheque;
+pub use cheque::*;

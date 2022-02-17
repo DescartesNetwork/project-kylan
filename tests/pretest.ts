@@ -85,3 +85,21 @@ export const findCert = async (
   )
   return cert
 }
+
+export const findCheque = async (
+  printer: web3.PublicKey,
+  secureToken: web3.PublicKey,
+  authority: web3.PublicKey,
+  programId: web3.PublicKey,
+) => {
+  const [cheque] = await web3.PublicKey.findProgramAddress(
+    [
+      Buffer.from('cheque'),
+      printer.toBuffer(),
+      secureToken.toBuffer(),
+      authority.toBuffer(),
+    ],
+    programId,
+  )
+  return cheque
+}

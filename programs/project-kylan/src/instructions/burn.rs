@@ -1,5 +1,5 @@
 use crate::errors::ErrorCode;
-use crate::schema::{cert::*, printer::*};
+use crate::schema::{cert::*, cheque::*, printer::*};
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token, token};
 
@@ -23,10 +23,12 @@ pub struct Burn<'info> {
     associated_token::authority = authority
   )]
   pub dst_associated_token_account: Account<'info, token::TokenAccount>,
-  #[account(has_one = printer, has_one = secure_token)]
-  pub cert: Box<Account<'info, Cert>>,
   #[account(has_one = stable_token)]
   pub printer: Box<Account<'info, Printer>>,
+  #[account(has_one = printer, has_one = secure_token)]
+  pub cert: Box<Account<'info, Cert>>,
+  #[account(mut, has_one = printer, has_one = secure_token, has_one = authority)]
+  pub cheque: Box<Account<'info, Cheque>>,
   pub system_program: Program<'info, System>,
   pub token_program: Program<'info, token::Token>,
   pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
@@ -47,6 +49,9 @@ pub fn exec(ctx: Context<Burn>, amount: u64) -> ProgramResult {
     },
   );
   token::burn(burn_ctx, amount)?;
+  // Build the cheque
+  let cheque = &mut ctx.accounts.cheque;
+  cheque.sub(amount).ok_or(ErrorCode::Overflow)?;
   // Unstake secure tokens
   let seeds: &[&[&[u8]]] = &[&[
     &ctx.accounts.stable_token.key().to_bytes(),

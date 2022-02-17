@@ -1,5 +1,5 @@
 use crate::errors::ErrorCode;
-use crate::schema::{cert, printer};
+use crate::schema::{cert::*, cheque::*, printer::*};
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token, token};
 
@@ -28,10 +28,12 @@ pub struct Print<'info> {
     associated_token::authority = authority
   )]
   pub dst_associated_token_account: Account<'info, token::TokenAccount>,
-  #[account(has_one = printer, has_one = secure_token)]
-  pub cert: Box<Account<'info, cert::Cert>>,
   #[account(has_one = stable_token)]
-  pub printer: Box<Account<'info, printer::Printer>>,
+  pub printer: Box<Account<'info, Printer>>,
+  #[account(has_one = printer, has_one = secure_token)]
+  pub cert: Box<Account<'info, Cert>>,
+  #[account(mut, has_one = printer, has_one = secure_token, has_one = authority)]
+  pub cheque: Box<Account<'info, Cheque>>,
   pub system_program: Program<'info, System>,
   pub token_program: Program<'info, token::Token>,
   pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
@@ -72,5 +74,8 @@ pub fn exec(ctx: Context<Print>, amount: u64) -> ProgramResult {
     seeds,
   );
   token::mint_to(mint_to_ctx, printable_amount)?;
+  // Build the cheque
+  let cheque = &mut ctx.accounts.cheque;
+  cheque.add(printable_amount).ok_or(ErrorCode::Overflow)?;
   Ok(())
 }

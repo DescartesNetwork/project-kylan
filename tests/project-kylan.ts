@@ -10,7 +10,12 @@ import {
   SplToken,
 } from '@project-serum/anchor'
 import { ProjectKylan } from '../target/types/project_kylan'
-import { initializeMint, initializeAccount, findCert } from './pretest'
+import {
+  initializeMint,
+  initializeAccount,
+  findCert,
+  findCheque,
+} from './pretest'
 
 const NUMERATOR_RATE = new BN(10 ** 8)
 const DENOMINATOR_RATE = new BN(10 ** 9)
@@ -33,8 +38,9 @@ describe('project-kylan', () => {
     kylanProgram: Program<ProjectKylan>,
     stableToken: web3.Keypair,
     secureToken: web3.Keypair,
-    cert: web3.PublicKey,
     printer: web3.Keypair,
+    cert: web3.PublicKey,
+    cheque: web3.PublicKey,
     treasurer: web3.PublicKey,
     treasury: web3.PublicKey,
     stableAssociatedTokenAccount: web3.PublicKey,
@@ -48,6 +54,12 @@ describe('project-kylan', () => {
     cert = await findCert(
       printer.publicKey,
       secureToken.publicKey,
+      kylanProgram.programId,
+    )
+    cheque = await findCheque(
+      printer.publicKey,
+      secureToken.publicKey,
+      kylanProgram.provider.wallet.publicKey,
       kylanProgram.programId,
     )
     const [treasurerPublicKey] = await web3.PublicKey.findProgramAddress(
@@ -129,6 +141,23 @@ describe('project-kylan', () => {
     console.log('\tPrinter:', printerPublicKey.toBase58())
   })
 
+  it('initialize a cheque', async () => {
+    await kylanProgram.rpc.initializeCheque({
+      accounts: {
+        stableToken: stableToken.publicKey,
+        secureToken: secureToken.publicKey,
+        authority: provider.wallet.publicKey,
+        printer: printer.publicKey,
+        cheque,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
+      },
+    })
+    const { printer: printerPublicKey } =
+      await kylanProgram.account.cheque.fetch(cheque)
+    console.log('\tPrinter:', printerPublicKey.toBase58())
+  })
+
   it('print #1', async () => {
     await kylanProgram.rpc.print(new BN(10_000_000_000), {
       accounts: {
@@ -143,8 +172,9 @@ describe('project-kylan', () => {
         treasury,
         srcAssociatedTokenAccount: secureAssociatedTokenAccount,
         dstAssociatedTokenAccount: stableAssociatedTokenAccount,
-        cert,
         printer: printer.publicKey,
+        cert,
+        cheque,
       },
     })
     // Fix incorrect spl idl
@@ -154,8 +184,12 @@ describe('project-kylan', () => {
     const { amount: stableAmount } = await (
       splProgram.account as any
     ).token.fetch(stableAssociatedTokenAccount)
+    const { amount: chequeAmount } = await kylanProgram.account.cheque.fetch(
+      cheque,
+    )
     console.log('\tSecure Amount:', secureAmount.toNumber())
     console.log('\tStable Amount:', stableAmount.toNumber())
+    console.log('\tCheque Amount:', chequeAmount.toNumber())
   })
 
   it('print #2', async () => {
@@ -172,8 +206,9 @@ describe('project-kylan', () => {
         treasury,
         srcAssociatedTokenAccount: secureAssociatedTokenAccount,
         dstAssociatedTokenAccount: stableAssociatedTokenAccount,
-        cert,
         printer: printer.publicKey,
+        cert,
+        cheque,
       },
     })
     // Fix incorrect spl idl
@@ -183,8 +218,12 @@ describe('project-kylan', () => {
     const { amount: stableAmount } = await (
       splProgram.account as any
     ).token.fetch(stableAssociatedTokenAccount)
+    const { amount: chequeAmount } = await kylanProgram.account.cheque.fetch(
+      cheque,
+    )
     console.log('\tSecure Amount:', secureAmount.toNumber())
     console.log('\tStable Amount:', stableAmount.toNumber())
+    console.log('\tCheque Amount:', chequeAmount.toNumber())
   })
 
   it('get data manually', async () => {
@@ -209,8 +248,9 @@ describe('project-kylan', () => {
         treasury,
         srcAssociatedTokenAccount: stableAssociatedTokenAccount,
         dstAssociatedTokenAccount: secureAssociatedTokenAccount,
-        cert,
         printer: printer.publicKey,
+        cert,
+        cheque,
       },
     })
     // Fix incorrect spl idl
@@ -238,8 +278,9 @@ describe('project-kylan', () => {
         treasury,
         srcAssociatedTokenAccount: stableAssociatedTokenAccount,
         dstAssociatedTokenAccount: secureAssociatedTokenAccount,
-        cert,
         printer: printer.publicKey,
+        cert,
+        cheque,
       },
     })
     // Fix incorrect spl idl
@@ -285,8 +326,9 @@ describe('project-kylan', () => {
           treasury,
           srcAssociatedTokenAccount: stableAssociatedTokenAccount,
           dstAssociatedTokenAccount: secureAssociatedTokenAccount,
-          cert,
           printer: printer.publicKey,
+          cert,
+          cheque,
         },
       })
     } catch (er) {

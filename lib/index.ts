@@ -14,10 +14,11 @@ import {
   DEFAULT_KYLAN_PROGRAM_ID,
   DEFAULT_KYLAN_IDL,
 } from './constant'
-import { findCert, isAddress } from './utils'
+import { findCert, findCheque, isAddress } from './utils'
 
-export type PrinterData = TypeDef<ProjectKylan['accounts'][1], ProjectKylan>
+export type PrinterData = TypeDef<ProjectKylan['accounts'][2], ProjectKylan>
 export type CertData = TypeDef<ProjectKylan['accounts'][0], ProjectKylan>
+export type ChequeData = TypeDef<ProjectKylan['accounts'][1], ProjectKylan>
 type Uninitialized = { uninitialized: {} }
 type Active = { active: {} }
 type PrintOnly = { printOnly: {} }
@@ -94,6 +95,24 @@ class Kylan {
   }
 
   /**
+   * Parse cheque buffer data.
+   * @param data Cheque buffer data.
+   * @returns Cheque readable data.
+   */
+  parseChequeData = (data: Buffer): ChequeData => {
+    return this.program.coder.accounts.decode('cheque', data)
+  }
+
+  /**
+   * Get cheque data.
+   * @param chequeAddress Cheque address.
+   * @returns Cheque readable data.
+   */
+  getChequeData = async (chequeAddress: string): Promise<ChequeData> => {
+    return this.program.account.cheque.fetch(chequeAddress)
+  }
+
+  /**
    * Derive a certificate address by printer address and secure token address.
    * @param printerAddress Printer address.
    * @param secureTokenAddress Secure token address.
@@ -130,6 +149,46 @@ class Kylan {
     }
 
     return certAddress
+  }
+
+  /**
+   * Derive a cheque address by printer address and secure token address.
+   * @param printerAddress Printer address.
+   * @param secureTokenAddress Secure token address.
+   * @param strict (Optional) if true, a validation process will activate to make sure the cheque is safe.
+   * @returns Cheque address.
+   */
+  deriveChequeAddress = async (
+    printerAddress: string,
+    secureTokenAddress: string,
+    strict: boolean = false,
+  ) => {
+    if (!isAddress(printerAddress)) throw new Error('Invalid printer address')
+    if (!isAddress(secureTokenAddress))
+      throw new Error('Invalid secure token address')
+    const chequePublickKey = await findCheque(
+      new web3.PublicKey(printerAddress),
+      new web3.PublicKey(secureTokenAddress),
+      this.program.provider.wallet.publicKey,
+      this.program.programId,
+    )
+    const chequeAddress = chequePublickKey.toBase58()
+
+    if (strict) {
+      let onchainSecureTokenAddress: string
+      try {
+        const { secureToken } = await this.getChequeData(chequeAddress)
+        onchainSecureTokenAddress = secureToken.toBase58()
+      } catch (er) {
+        throw new Error(
+          `The cheque ${chequeAddress} may be not initialized yet`,
+        )
+      }
+      if (secureTokenAddress !== onchainSecureTokenAddress)
+        throw new Error('Violated cheque')
+    }
+
+    return chequeAddress
   }
 
   /**
@@ -241,6 +300,40 @@ class Kylan {
   }
 
   /**
+   * Create a cheque that memorizes user's print & burn history.
+   * @param printerAddress Printer address.
+   * @param secureTokenAddress Secure token address.
+   * @returns { txId, certAddress }
+   */
+  initializeCheque = async (
+    printerAddress: string,
+    secureTokenAddress: string,
+  ) => {
+    if (!isAddress(secureTokenAddress))
+      throw new Error('Invalid secure token address')
+    if (!isAddress(printerAddress)) throw new Error('Invalid printer address')
+    const { stableToken: stableTokenPublicKey } = await this.getPrinterData(
+      printerAddress,
+    )
+    const chequeAddress = await this.deriveChequeAddress(
+      printerAddress,
+      secureTokenAddress,
+    )
+    const txId = await this.program.rpc.initializeCheque({
+      accounts: {
+        stableToken: stableTokenPublicKey,
+        secureToken: new web3.PublicKey(secureTokenAddress),
+        authority: this.program.provider.wallet.publicKey,
+        printer: new web3.PublicKey(printerAddress),
+        cheque: new web3.PublicKey(chequeAddress),
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
+      },
+    })
+    return { txId, chequeAddress }
+  }
+
+  /**
    * Print stable tokens by staking a number of secure tokens.
    * The printed amount is computed by the predefined numerator & denominator rate of the certification of the secure token.
    * @param amount Staking amount.
@@ -259,6 +352,11 @@ class Kylan {
       throw new Error('Invalid secure token address')
     if (!isAddress(printerAddress)) throw new Error('Invalid printer address')
     const certAddress = await this.deriveCertAddress(
+      printerAddress,
+      secureTokenAddress,
+      true,
+    )
+    const chequeAddress = await this.deriveChequeAddress(
       printerAddress,
       secureTokenAddress,
       true,
@@ -294,8 +392,9 @@ class Kylan {
         treasury,
         srcAssociatedTokenAccount,
         dstAssociatedTokenAccount,
-        cert: new web3.PublicKey(certAddress),
         printer: new web3.PublicKey(printerAddress),
+        cert: new web3.PublicKey(certAddress),
+        cheque: new web3.PublicKey(chequeAddress),
       },
     })
     return { txId, dstAddress: dstAssociatedTokenAccount.toBase58() }
@@ -320,6 +419,11 @@ class Kylan {
       throw new Error('Invalid secure token address')
     if (!isAddress(printerAddress)) throw new Error('Invalid printer address')
     const certAddress = await this.deriveCertAddress(
+      printerAddress,
+      secureTokenAddress,
+      true,
+    )
+    const chequeAddress = await this.deriveChequeAddress(
       printerAddress,
       secureTokenAddress,
       true,
@@ -355,8 +459,9 @@ class Kylan {
         treasury,
         srcAssociatedTokenAccount,
         dstAssociatedTokenAccount,
-        cert: new web3.PublicKey(certAddress),
         printer: new web3.PublicKey(printerAddress),
+        cert: new web3.PublicKey(certAddress),
+        cheque: new web3.PublicKey(chequeAddress),
       },
     })
     return { txId, dstAddress: dstAssociatedTokenAccount.toBase58() }

@@ -25,6 +25,10 @@ mod project_kylan {
     initialize_cert::exec(ctx, numerator_rate, denominator_rate)
   }
 
+  pub fn initialize_cheque(ctx: Context<InitializeCheque>) -> ProgramResult {
+    initialize_cheque::exec(ctx)
+  }
+
   pub fn print(ctx: Context<Print>, amount: u64) -> ProgramResult {
     print::exec(ctx, amount)
   }

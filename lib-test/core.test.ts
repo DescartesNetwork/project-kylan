@@ -23,6 +23,8 @@ describe('@project-kylan/core', function () {
     connection: web3.Connection,
     splProgram: Program<SplToken>,
     printerAddress: string,
+    certAddress: string,
+    chequeAddress: string,
     stableTokenAddress: string,
     secureTokenAddress: string,
     stableAssociatedTokenAddress: string,
@@ -85,6 +87,14 @@ describe('@project-kylan/core', function () {
         mint: new web3.PublicKey(stableTokenAddress),
       })
     ).toBase58()
+    certAddress = await kylan.deriveCertAddress(
+      printerAddress,
+      secureTokenAddress,
+    )
+    chequeAddress = await kylan.deriveChequeAddress(
+      printerAddress,
+      secureTokenAddress,
+    )
   })
 
   it('get printer data', async function () {
@@ -100,11 +110,15 @@ describe('@project-kylan/core', function () {
   })
 
   it('get cert data', async function () {
-    const certAddress = await kylan.deriveCertAddress(
-      printerAddress,
-      secureTokenAddress,
-    )
     await kylan.getCertData(certAddress)
+  })
+
+  it('initialize a cheque', async function () {
+    await kylan.initializeCheque(printerAddress, secureTokenAddress)
+  })
+
+  it('get cheque data', async function () {
+    await kylan.getChequeData(chequeAddress)
   })
 
   it('print #1 - the associated account is not initialized', async function () {
@@ -114,10 +128,14 @@ describe('@project-kylan/core', function () {
       secureTokenAddress,
       printerAddress,
     )
-    const { amount: nextAmount } = await (
+    // Test stable balance
+    const { amount: stableAmount } = await (
       splProgram.account as any
     ).token.fetch(dstAddress)
-    if (!amount.eq(nextAmount)) throw new Error('Invalid printed amount')
+    if (!amount.eq(stableAmount)) throw new Error('Invalid printed amount')
+    // Test cheque history
+    const { amount: chequeAmount } = await kylan.getChequeData(chequeAddress)
+    if (!amount.eq(chequeAmount)) throw new Error('Invalid printed amount')
   })
 
   it('print #2 - the associated account is already initialized', async function () {
@@ -127,31 +145,36 @@ describe('@project-kylan/core', function () {
       secureTokenAddress,
       printerAddress,
     )
-    const { amount: nextAmount } = await (
+    // Test stable balance
+    const { amount: stableAmount } = await (
       splProgram.account as any
     ).token.fetch(dstAddress)
-    if (!amount.mul(new BN(2)).eq(nextAmount))
+    if (!amount.mul(new BN(2)).eq(stableAmount))
+      throw new Error('Invalid printed amount')
+    // Test cheque history
+    const { amount: chequeAmount } = await kylan.getChequeData(chequeAddress)
+    if (!amount.mul(new BN(2)).eq(chequeAmount))
       throw new Error('Invalid printed amount')
   })
 
   it('burn', async function () {
     const amount = new BN(10 ** 6)
+    await kylan.burn(amount, secureTokenAddress, printerAddress)
+    // Test stable balance
     const srcAddress = await utils.token.associatedAddress({
       mint: new web3.PublicKey(stableTokenAddress),
       owner: kylan.program.provider.wallet.publicKey,
     })
-    await kylan.burn(amount, secureTokenAddress, printerAddress)
-    const { amount: nextAmount } = await (
+    const { amount: stableAmount } = await (
       splProgram.account as any
     ).token.fetch(srcAddress)
-    if (!amount.eq(nextAmount)) throw new Error('Invalid burned amount')
+    if (!amount.eq(stableAmount)) throw new Error('Invalid burned amount')
+    const { amount: chequeAmount } = await kylan.getChequeData(chequeAddress)
+    // Test cheque history
+    if (!amount.eq(chequeAmount)) throw new Error('Invalid printed amount')
   })
 
   it('set cert state', async function () {
-    const certAddress = await kylan.deriveCertAddress(
-      printerAddress,
-      secureTokenAddress,
-    )
     await kylan.setCertState(CertStates.Paused, certAddress)
   })
 })

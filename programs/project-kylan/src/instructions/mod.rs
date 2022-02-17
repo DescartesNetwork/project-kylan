@@ -4,6 +4,9 @@ pub use initialize_printer::*;
 pub mod initialize_cert;
 pub use initialize_cert::*;
 
+pub mod initialize_cheque;
+pub use initialize_cheque::*;
+
 pub mod print;
 pub use print::*;
 
