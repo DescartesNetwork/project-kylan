@@ -9,20 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Welcome
-        run: echo Start deploying Project Kylan
-      - name: Build Anchor
-        uses: actions-rs/toolchain@v1
+      - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: rustc --version && cargo --version
+      - name: Welcome
+        run: echo Start deploying Project Kylan
+      - name: Install Solana CLI
+        run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
       - name: Publish npm package
         uses: actions/setup-node@v2
         with:
           node-version: '12.x'
           registry-url: 'https://registry.npmjs.org'
       - run: npm i -g @project-serum/anchor-cli && npm install
-      - run: anchor --version
       - run: anchor build && npm run build
       - run: npm publish --access=public
         env:
