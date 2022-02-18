@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: npm i -g @project-serum/anchor-cli && npm install
       - name: Test Anchor
-        run: cd .. && anchor init test-anchor && ls && cd ./test-anchor && cargo clean && pwd && anchor build
+        run: cd .. && anchor init test-anchor && ls && cd ./test-anchor && cargo clean && pwd && cargo build-bpf
       - name: Build the program and library
         run: anchor build && npm run build
       - name: Publish the package
