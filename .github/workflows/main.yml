@@ -24,7 +24,7 @@ jobs:
       - name: Install Solana CLI
         run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
       - name: Reload PATH
-        run: export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH" && solana --version
+        run: echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH && solana --version
       - name: Install dependencies
         run: npm i -g @project-serum/anchor-cli && npm install
       - name: Build the program and library
