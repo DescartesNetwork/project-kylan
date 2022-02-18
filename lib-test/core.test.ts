@@ -16,6 +16,9 @@ const PRIV_KEY_FOR_TEST_ONLY = Buffer.from([
   215, 166, 105, 84, 194, 133, 92, 34, 27, 39, 2, 158, 57, 64, 226, 198, 222,
   25, 127, 150, 87, 141, 234, 34, 239, 139, 107, 155, 32, 47, 199,
 ])
+const PRECISION = new BN(1_000_000)
+const PRICE = new BN(1_000_000)
+const FEE = new BN(2_500)
 
 describe('@project-kylan/core', function () {
   const wallet = new Wallet(web3.Keypair.fromSecretKey(PRIV_KEY_FOR_TEST_ONLY))
@@ -28,22 +31,25 @@ describe('@project-kylan/core', function () {
     stableTokenAddress: string,
     secureTokenAddress: string,
     stableAssociatedTokenAddress: string,
-    secureAssociatedTokenAddress: string
-
+    secureAssociatedTokenAddress: string,
+    taxmanAuthorityAddress: string =
+      web3.Keypair.generate().publicKey.toBase58()
   before(async () => {
     const {
       program: { provider },
     } = new Kylan(wallet)
     splProgram = program(provider)
+    // Init a secure token
     const secureToken = web3.Keypair.generate()
     secureTokenAddress = secureToken.publicKey.toBase58()
+    await initializeMint(6, secureToken, splProgram)
     secureAssociatedTokenAddress = (
       await utils.token.associatedAddress({
         owner: provider.wallet.publicKey,
-        mint: secureToken.publicKey,
+        mint: new web3.PublicKey(secureTokenAddress),
       })
     ).toBase58()
-    await initializeMint(6, secureToken, splProgram)
+    // Mint secure tokens
     await initializeAccount(
       secureAssociatedTokenAddress,
       secureTokenAddress,
@@ -57,10 +63,11 @@ describe('@project-kylan/core', function () {
       },
       signers: [],
     })
+    // Check data
     const { amount } = await (splProgram.account as any).token.fetch(
       new web3.PublicKey(secureAssociatedTokenAddress),
     )
-    console.log('\tSecure Token:', secureToken.publicKey.toBase58())
+    console.log('\tSecure Token:', secureTokenAddress)
     console.log('\tAmount:', amount.toNumber())
   })
 
@@ -105,7 +112,9 @@ describe('@project-kylan/core', function () {
     await kylan.initializeCert(
       printerAddress,
       secureTokenAddress,
-      new BN(10 ** 6),
+      taxmanAuthorityAddress,
+      PRICE,
+      FEE,
     )
   })
 
@@ -172,6 +181,16 @@ describe('@project-kylan/core', function () {
     const { amount: chequeAmount } = await kylan.getChequeData(chequeAddress)
     // Test cheque history
     if (!amount.eq(chequeAmount)) throw new Error('Invalid printed amount')
+    // Test taxman balance
+    const taxmanAddress = await utils.token.associatedAddress({
+      mint: new web3.PublicKey(secureTokenAddress),
+      owner: new web3.PublicKey(taxmanAuthorityAddress),
+    })
+    const { amount: taxAmount } = await (splProgram.account as any).token.fetch(
+      taxmanAddress,
+    )
+    if (!amount.mul(FEE).div(PRECISION).eq(taxAmount))
+      throw new Error('Invalid charged amount')
   })
 
   it('set cert state', async function () {

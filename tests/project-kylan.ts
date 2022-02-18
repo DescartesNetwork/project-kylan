@@ -17,8 +17,8 @@ import {
   findCheque,
 } from './pretest'
 
-const NUMERATOR_RATE = new BN(10 ** 8)
-const DENOMINATOR_RATE = new BN(10 ** 9)
+const PRICE = new BN(100_000)
+const FEE = new BN(5_000)
 
 // https://github.com/project-serum/anchor/issues/1126
 const CertState = {
@@ -34,23 +34,20 @@ describe('project-kylan', () => {
   const provider = Provider.env()
   setProvider(provider)
   // Build needed accounts
-  let splProgram: Program<SplToken>,
-    kylanProgram: Program<ProjectKylan>,
-    stableToken: web3.Keypair,
-    secureToken: web3.Keypair,
-    printer: web3.Keypair,
+  let splProgram: Program<SplToken> = Spl.token(),
+    kylanProgram: Program<ProjectKylan> = workspace.ProjectKylan,
+    stableToken: web3.Keypair = web3.Keypair.generate(),
+    secureToken: web3.Keypair = web3.Keypair.generate(),
+    printer: web3.Keypair = web3.Keypair.generate(),
     cert: web3.PublicKey,
     cheque: web3.PublicKey,
     treasurer: web3.PublicKey,
     treasury: web3.PublicKey,
     stableAssociatedTokenAccount: web3.PublicKey,
-    secureAssociatedTokenAccount: web3.PublicKey
+    secureAssociatedTokenAccount: web3.PublicKey,
+    taxmanAuthority: web3.Keypair = web3.Keypair.generate(),
+    taxman: web3.PublicKey
   before(async () => {
-    kylanProgram = workspace.ProjectKylan
-    splProgram = Spl.token()
-    stableToken = web3.Keypair.generate()
-    secureToken = web3.Keypair.generate()
-    printer = web3.Keypair.generate()
     cert = await findCert(
       printer.publicKey,
       secureToken.publicKey,
@@ -77,6 +74,10 @@ describe('project-kylan', () => {
     })
     secureAssociatedTokenAccount = await utils.token.associatedAddress({
       owner: provider.wallet.publicKey,
+      mint: secureToken.publicKey,
+    })
+    taxman = await utils.token.associatedAddress({
+      owner: taxmanAuthority.publicKey,
       mint: secureToken.publicKey,
     })
   })
@@ -124,13 +125,17 @@ describe('project-kylan', () => {
   })
 
   it('initialize a cert', async () => {
-    await kylanProgram.rpc.initializeCert(NUMERATOR_RATE, DENOMINATOR_RATE, {
+    await kylanProgram.rpc.initializeCert(PRICE, FEE, {
       accounts: {
         stableToken: stableToken.publicKey,
         secureToken: secureToken.publicKey,
         authority: provider.wallet.publicKey,
         printer: printer.publicKey,
         cert,
+        taxman,
+        taxmanAuthority: taxmanAuthority.publicKey,
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
         systemProgram: web3.SystemProgram.programId,
         rent: web3.SYSVAR_RENT_PUBKEY,
       },
@@ -164,10 +169,6 @@ describe('project-kylan', () => {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
         authority: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
-        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
         treasurer,
         treasury,
         srcAssociatedTokenAccount: secureAssociatedTokenAccount,
@@ -175,6 +176,10 @@ describe('project-kylan', () => {
         printer: printer.publicKey,
         cert,
         cheque,
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
       },
     })
     // Fix incorrect spl idl
@@ -198,10 +203,6 @@ describe('project-kylan', () => {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
         authority: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
-        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
         treasurer,
         treasury,
         srcAssociatedTokenAccount: secureAssociatedTokenAccount,
@@ -209,6 +210,10 @@ describe('project-kylan', () => {
         printer: printer.publicKey,
         cert,
         cheque,
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
       },
     })
     // Fix incorrect spl idl
@@ -240,10 +245,6 @@ describe('project-kylan', () => {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
         authority: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
-        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
         treasurer,
         treasury,
         srcAssociatedTokenAccount: stableAssociatedTokenAccount,
@@ -251,6 +252,11 @@ describe('project-kylan', () => {
         printer: printer.publicKey,
         cert,
         cheque,
+        taxman,
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
       },
     })
     // Fix incorrect spl idl
@@ -270,10 +276,6 @@ describe('project-kylan', () => {
         secureToken: secureToken.publicKey,
         stableToken: stableToken.publicKey,
         authority: provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
-        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
         treasurer,
         treasury,
         srcAssociatedTokenAccount: stableAssociatedTokenAccount,
@@ -281,6 +283,11 @@ describe('project-kylan', () => {
         printer: printer.publicKey,
         cert,
         cheque,
+        taxman,
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
       },
     })
     // Fix incorrect spl idl
@@ -318,10 +325,6 @@ describe('project-kylan', () => {
           secureToken: secureToken.publicKey,
           stableToken: stableToken.publicKey,
           authority: provider.wallet.publicKey,
-          systemProgram: web3.SystemProgram.programId,
-          rent: web3.SYSVAR_RENT_PUBKEY,
-          tokenProgram: utils.token.TOKEN_PROGRAM_ID,
-          associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
           treasurer,
           treasury,
           srcAssociatedTokenAccount: stableAssociatedTokenAccount,
@@ -329,6 +332,11 @@ describe('project-kylan', () => {
           printer: printer.publicKey,
           cert,
           cheque,
+          taxman,
+          tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+          associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+          systemProgram: web3.SystemProgram.programId,
+          rent: web3.SYSVAR_RENT_PUBKEY,
         },
       })
     } catch (er) {

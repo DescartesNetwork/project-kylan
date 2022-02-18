@@ -17,12 +17,8 @@ mod project_kylan {
     initialize_printer::exec(ctx, decimals)
   }
 
-  pub fn initialize_cert(
-    ctx: Context<InitializeCert>,
-    numerator_rate: u64,
-    denominator_rate: u64,
-  ) -> ProgramResult {
-    initialize_cert::exec(ctx, numerator_rate, denominator_rate)
+  pub fn initialize_cert(ctx: Context<InitializeCert>, price: u64, fee: u64) -> ProgramResult {
+    initialize_cert::exec(ctx, price, fee)
   }
 
   pub fn initialize_cheque(ctx: Context<InitializeCheque>) -> ProgramResult {

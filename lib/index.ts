@@ -246,34 +246,32 @@ class Kylan {
 
   /**
    * Create a certificate that allows the printer could print/burn a new secure token.
-   * The ratio between the stable and secure token is defined by numerator_rate and denominator_rate.
-   * $1 = 1 Stable Token = numerator_rate / denominator_rate * secure_token_price
+   * The ratio between the stable and secure token is defined by price.
+   * 1 stable token = $1 = price / 10^6 * 1 secure_token
    * For example, if one secure token worths $0.75, then
-   * 1 Stable Token = 4 / 3 * 0.75 so numerator_rate = 4 and denominator_rate = 3
+   * 1 Stable Token = 1,333,333 / 1,000,000 * 0.75 so price = 1,333,333
    * @param printerAddress Printer address.
    * @param secureTokenAddress Secure token address.
-   * @param numerator_rate Numerator of price rate.
-   * @param denominator_rate Denominator of price rate. Default is 10^6.
+   * @param taxmanAuthorityAddress Taxman authority (owner) address.
+   * @param price Secure token price with decimals 6.
+   * @param fee Burning Fee. Default is 5000 with decimals 6 (0.5%).
    * @returns { txId, certAddress }
    */
   initializeCert = async (
     printerAddress: string,
     secureTokenAddress: string,
-    numerator_rate: BN,
-    denominator_rate: BN = new BN(10 ** 6),
+    taxmanAuthorityAddress: string,
+    price: BN,
+    fee: BN = new BN(5000),
   ) => {
     if (!isAddress(secureTokenAddress))
       throw new Error('Invalid secure token address')
     if (!isAddress(printerAddress)) throw new Error('Invalid printer address')
-    if (
-      numerator_rate.isZero() ||
-      numerator_rate.isNeg() ||
-      denominator_rate.isZero() ||
-      denominator_rate.isNeg()
-    )
-      throw new Error(
-        'The numerator and denominator should be greater than zero',
-      )
+    if (!isAddress(taxmanAuthorityAddress))
+      throw new Error('Invalid taxman authority address')
+    if (price.isZero() || price.isNeg())
+      throw new Error('The price should be greater than zero')
+    if (fee.isNeg()) throw new Error('The fee should not be negative')
     const { stableToken: stableTokenPublicKey } = await this.getPrinterData(
       printerAddress,
     )
@@ -281,21 +279,25 @@ class Kylan {
       printerAddress,
       secureTokenAddress,
     )
-    const txId = await this.program.rpc.initializeCert(
-      numerator_rate,
-      denominator_rate,
-      {
-        accounts: {
-          stableToken: stableTokenPublicKey,
-          secureToken: new web3.PublicKey(secureTokenAddress),
-          authority: this.program.provider.wallet.publicKey,
-          printer: new web3.PublicKey(printerAddress),
-          cert: new web3.PublicKey(certAddress),
-          systemProgram: web3.SystemProgram.programId,
-          rent: web3.SYSVAR_RENT_PUBKEY,
-        },
+    const taxmanPublicKey = await utils.token.associatedAddress({
+      mint: new web3.PublicKey(secureTokenAddress),
+      owner: new web3.PublicKey(taxmanAuthorityAddress),
+    })
+    const txId = await this.program.rpc.initializeCert(price, fee, {
+      accounts: {
+        stableToken: stableTokenPublicKey,
+        secureToken: new web3.PublicKey(secureTokenAddress),
+        authority: this.program.provider.wallet.publicKey,
+        printer: new web3.PublicKey(printerAddress),
+        cert: new web3.PublicKey(certAddress),
+        taxman: taxmanPublicKey,
+        taxmanAuthority: new web3.PublicKey(taxmanAuthorityAddress),
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
       },
-    )
+    })
     return { txId, certAddress }
   }
 
@@ -431,6 +433,7 @@ class Kylan {
     const { stableToken: stableTokenPublicKey } = await this.getPrinterData(
       printerAddress,
     )
+    const { taxman } = await this.getCertData(certAddress)
     const treasurerAddress = await this.deriveTreasurerAddress(
       stableTokenPublicKey.toBase58(),
     )
@@ -451,10 +454,6 @@ class Kylan {
         secureToken: new web3.PublicKey(secureTokenAddress),
         stableToken: stableTokenPublicKey,
         authority: this.program.provider.wallet.publicKey,
-        systemProgram: web3.SystemProgram.programId,
-        rent: web3.SYSVAR_RENT_PUBKEY,
-        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
-        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
         treasurer: new web3.PublicKey(treasurerAddress),
         treasury,
         srcAssociatedTokenAccount,
@@ -462,6 +461,11 @@ class Kylan {
         printer: new web3.PublicKey(printerAddress),
         cert: new web3.PublicKey(certAddress),
         cheque: new web3.PublicKey(chequeAddress),
+        taxman,
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
       },
     })
     return { txId, dstAddress: dstAssociatedTokenAccount.toBase58() }

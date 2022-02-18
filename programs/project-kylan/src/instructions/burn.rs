@@ -25,10 +25,12 @@ pub struct Burn<'info> {
   pub dst_associated_token_account: Account<'info, token::TokenAccount>,
   #[account(has_one = stable_token)]
   pub printer: Box<Account<'info, Printer>>,
-  #[account(has_one = printer, has_one = secure_token)]
+  #[account(has_one = printer, has_one = secure_token, has_one = taxman)]
   pub cert: Box<Account<'info, Cert>>,
   #[account(mut, has_one = printer, has_one = secure_token, has_one = authority)]
   pub cheque: Box<Account<'info, Cheque>>,
+  #[account(mut)]
+  pub taxman: Box<Account<'info, token::TokenAccount>>,
   pub system_program: Program<'info, System>,
   pub token_program: Program<'info, token::Token>,
   pub associated_token_program: Program<'info, associated_token::AssociatedToken>,
@@ -57,11 +59,23 @@ pub fn exec(ctx: Context<Burn>, amount: u64) -> ProgramResult {
     &ctx.accounts.stable_token.key().to_bytes(),
     &[*ctx.bumps.get("treasurer").unwrap()],
   ]];
-  let burnable_amount = ctx
+  let (burnable_amount, chargeable_amount) = ctx
     .accounts
     .cert
     .burnable_amount(amount)
     .ok_or(ErrorCode::Overflow)?;
+  // Transfer fee
+  let fee_ctx = CpiContext::new_with_signer(
+    ctx.accounts.token_program.to_account_info(),
+    token::Transfer {
+      from: ctx.accounts.treasury.to_account_info(),
+      to: ctx.accounts.taxman.to_account_info(),
+      authority: ctx.accounts.treasurer.to_account_info(),
+    },
+    seeds,
+  );
+  token::transfer(fee_ctx, chargeable_amount)?;
+  // Transfer secure tokens
   let transfer_ctx = CpiContext::new_with_signer(
     ctx.accounts.token_program.to_account_info(),
     token::Transfer {
