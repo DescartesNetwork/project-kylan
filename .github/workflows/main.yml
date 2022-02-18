@@ -16,6 +16,7 @@ jobs:
         run: echo Start deploying Project Kylan
       - name: Install Solana CLI
         run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+        run: solana --version
       - name: Publish npm package
         uses: actions/setup-node@v2
         with:
