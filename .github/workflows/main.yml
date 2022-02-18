@@ -22,8 +22,8 @@ jobs:
         run: echo Start deploying Project Kylan
       - name: Install Solana CLI
         run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
-      - name: Reload PATH
-        run: source ~/.bashrc && source ~/.profile && source ~/.bash_profile
+      - name: Export the PATH
+        run: export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
       - name: Install dependencies
         run: npm i -g @project-serum/anchor-cli && npm install
       - name: Build the program and library
