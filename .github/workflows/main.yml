@@ -9,22 +9,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - name: Setup Rust env
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: Welcome
-        run: echo Start deploying Project Kylan
-      - name: Install Solana CLI
-        run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)" && source ~/.profile && source ~/.bash_profile
-      - run: cat ~/.profile && cat ~/.bash_profile
-      - name: Publish npm package
+      - name: Setup Node env
         uses: actions/setup-node@v2
         with:
           node-version: '12.x'
           registry-url: 'https://registry.npmjs.org'
-      - run: npm i -g @project-serum/anchor-cli && npm install
-      - run: anchor build && npm run build
-      - run: npm publish --access=public
+      - name: Welcome
+        run: echo Start deploying Project Kylan
+      - name: Install Solana CLI
+        run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+      - name: Reload PATH
+        run: source ~/.bashrc && source ~/.profile && source ~/.bash_profile
+      - name: Install dependencies
+        run: npm i -g @project-serum/anchor-cli && npm install
+      - name: Build the program and library
+        run: anchor build && npm run build
+      - name: Publish the package
+        run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Deploy docs to gh-pages branch
