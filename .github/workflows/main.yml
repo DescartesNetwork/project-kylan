@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: npm i -g @project-serum/anchor-cli && npm install
       - name: Test Anchor
-        run: cd .. && anchor init test-anchor && ls && cd ./test-anchor && anchor build
+        run: rm -rf ~/.cache/solana/v1.18 && rm -rf ~/.cache/solana/v1.15 && cd .. && anchor init test-anchor && ls && cd ./test-anchor && anchor build
       - name: Build the program and library
         run: anchor build && npm run build
       - name: Publish the package
