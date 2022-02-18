@@ -24,11 +24,15 @@ jobs:
       - name: Install Solana CLI
         run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
       - name: Reload PATH
-        run: echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH && solana --version
+        run: |
+          echo $GITHUB_PATH
+          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
+          echo "/home/runner/.local/share/solana/install/active_release/bin:$GITHUB_PATH" >> $GITHUB_PATH
+          solana --version
       - name: Install dependencies
         run: npm i -g @project-serum/anchor-cli && npm install
       - name: Build the program and library
-        run: cargo-build-bpf && anchor build && npm run build
+        run: anchor build && npm run build
       - name: Publish the package
         run: npm publish --access=public
         env:
