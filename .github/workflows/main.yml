@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        run: sudo apt-get update && sudo apt-get upgrade && sudo apt-get install -y pkg-config build-essential libudev-dev
       - name: Setup Rust env
         uses: actions-rs/toolchain@v1
         with:
@@ -25,6 +24,7 @@ jobs:
         run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
       - name: Reload PATH
         run: source ~/.profile && source ~/.bash_profile && solana --version
+      - run: sudo apt-get update && sudo apt-get upgrade && sudo apt-get install -y pkg-config build-essential libudev-dev
       - name: Install dependencies
         run: cargo install --git https://github.com/project-serum/anchor --tag v0.21.0 anchor-cli --locked && npm install
       - name: Build the program and library
