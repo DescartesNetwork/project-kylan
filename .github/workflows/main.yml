@@ -22,7 +22,7 @@ jobs:
       - name: Welcome
         run: echo Start deploying Project Kylan
       - name: Install Solana CLI
-        run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+        run: sh -c "$(curl -sSfL https://release.solana.com/v1.9.7/install)"
       - name: Reload PATH
         run: source ~/.profile && source ~/.bash_profile && solana --version
       - name: Install dependencies
