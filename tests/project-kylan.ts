@@ -347,4 +347,45 @@ describe('project-kylan', () => {
         throw new Error('The function checks are by-passed')
     }
   })
+
+  it('set cert fee', async () => {
+    const newFee = new BN(1_000)
+    await kylanProgram.rpc.setCertFee(newFee, {
+      accounts: {
+        secureToken: secureToken.publicKey,
+        stableToken: stableToken.publicKey,
+        authority: provider.wallet.publicKey,
+        printer: printer.publicKey,
+        cert,
+      },
+    })
+    const { fee } = await kylanProgram.account.cert.fetch(cert)
+    if (!fee.eq(newFee)) throw new Error('Cannot update cert fee')
+  })
+
+  it('set cert taxman', async () => {
+    const taxmanAuthority = web3.Keypair.generate().publicKey
+    const newTaxman = await utils.token.associatedAddress({
+      mint: secureToken.publicKey,
+      owner: taxmanAuthority,
+    })
+    await kylanProgram.rpc.setCertTaxman({
+      accounts: {
+        secureToken: secureToken.publicKey,
+        stableToken: stableToken.publicKey,
+        authority: provider.wallet.publicKey,
+        printer: printer.publicKey,
+        cert,
+        taxman: newTaxman,
+        taxmanAuthority,
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
+      },
+    })
+    const { taxman } = await kylanProgram.account.cert.fetch(cert)
+    if (taxman.toBase58() !== newTaxman.toBase58())
+      throw new Error('Cannot update cert taxman')
+  })
 })

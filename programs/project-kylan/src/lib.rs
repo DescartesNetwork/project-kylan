@@ -36,4 +36,12 @@ mod project_kylan {
   pub fn set_cert_state(ctx: Context<SetCertState>, state: CertState) -> ProgramResult {
     set_cert_state::exec(ctx, state)
   }
+
+  pub fn set_cert_fee(ctx: Context<SetCertFee>, fee: u64) -> ProgramResult {
+    set_cert_fee::exec(ctx, fee)
+  }
+
+  pub fn set_cert_taxman(ctx: Context<SetCertTaxman>) -> ProgramResult {
+    set_cert_taxman::exec(ctx)
+  }
 }

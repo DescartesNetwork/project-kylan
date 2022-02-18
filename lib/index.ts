@@ -472,9 +472,9 @@ class Kylan {
   }
 
   /**
-   * Set new state for a certification
-   * @param state The new state
-   * @param certAddress Certificate address
+   * Set new state for a certification.
+   * @param state The new state.
+   * @param certAddress Certificate address.
    * @returns { txId }
    */
   setCertState = async (state: CertState, certAddress: string) => {
@@ -491,6 +491,69 @@ class Kylan {
         authority: this.program.provider.wallet.publicKey,
         printer: printerPublicKey,
         cert: new web3.PublicKey(certAddress),
+      },
+    })
+    return { txId }
+  }
+
+  /**
+   * Set new fee for a certification.
+   * @param fee The new fee.
+   * @param certAddress Certificate address.
+   * @returns { txId }
+   */
+  setCertFee = async (fee: BN, certAddress: string) => {
+    if (fee.isNeg()) throw new Error('The fee should not be negative')
+    if (!isAddress(certAddress)) throw new Error('Invalid cert address')
+    const { printer: printerPublicKey, secureToken: secureTokenPublicKey } =
+      await this.getCertData(certAddress)
+    const { stableToken: stableTokenPublicKey } = await this.getPrinterData(
+      printerPublicKey.toBase58(),
+    )
+    const txId = await this.program.rpc.setCertFee(fee, {
+      accounts: {
+        secureToken: secureTokenPublicKey,
+        stableToken: stableTokenPublicKey,
+        authority: this.program.provider.wallet.publicKey,
+        printer: printerPublicKey,
+        cert: new web3.PublicKey(certAddress),
+      },
+    })
+    return { txId }
+  }
+
+  /**
+   * Set new taxman for a certification.
+   * @param taxmanAuthority The new taxman authority (the function will auto derive the taxman account for the authority).
+   * @param certAddress Certificate address.
+   * @returns { txId }
+   */
+  setCertTaxman = async (taxmanAuthority: string, certAddress: string) => {
+    if (!isAddress(taxmanAuthority))
+      throw new Error('Invalid taxman authority address')
+    if (!isAddress(certAddress)) throw new Error('Invalid cert address')
+    const { printer: printerPublicKey, secureToken: secureTokenPublicKey } =
+      await this.getCertData(certAddress)
+    const { stableToken: stableTokenPublicKey } = await this.getPrinterData(
+      printerPublicKey.toBase58(),
+    )
+    const taxmanPublicKey = await utils.token.associatedAddress({
+      mint: secureTokenPublicKey,
+      owner: new web3.PublicKey(taxmanAuthority),
+    })
+    const txId = await this.program.rpc.setCertTaxman({
+      accounts: {
+        secureToken: secureTokenPublicKey,
+        stableToken: stableTokenPublicKey,
+        authority: this.program.provider.wallet.publicKey,
+        printer: printerPublicKey,
+        cert: new web3.PublicKey(certAddress),
+        taxman: taxmanPublicKey,
+        taxmanAuthority: new web3.PublicKey(taxmanAuthority),
+        tokenProgram: utils.token.TOKEN_PROGRAM_ID,
+        associatedTokenProgram: utils.token.ASSOCIATED_PROGRAM_ID,
+        systemProgram: web3.SystemProgram.programId,
+        rent: web3.SYSVAR_RENT_PUBKEY,
       },
     })
     return { txId }

@@ -195,5 +195,29 @@ describe('@project-kylan/core', function () {
 
   it('set cert state', async function () {
     await kylan.setCertState(CertStates.Paused, certAddress)
+    const { state } = await kylan.program.account.cert.fetch(certAddress)
+    console.log(state)
+  })
+
+  it('set cert fee', async function () {
+    const newFee = FEE.mul(new BN(2))
+    await kylan.setCertFee(newFee, certAddress)
+    const { fee } = await kylan.program.account.cert.fetch(certAddress)
+    if (!fee.eq(newFee)) throw new Error('Cannot update cert fee')
+  })
+
+  it('set cert state', async function () {
+    const newTaxmanAuthority = web3.Keypair.generate()
+    const newTaxman = await utils.token.associatedAddress({
+      mint: new web3.PublicKey(secureTokenAddress),
+      owner: newTaxmanAuthority.publicKey,
+    })
+    await kylan.setCertTaxman(
+      newTaxmanAuthority.publicKey.toBase58(),
+      certAddress,
+    )
+    const { taxman } = await kylan.program.account.cert.fetch(certAddress)
+    if (newTaxman.toBase58() !== taxman.toBase58())
+      throw new Error('Cannot update cert taxman')
   })
 })
