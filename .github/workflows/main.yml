@@ -26,7 +26,9 @@ jobs:
       - name: Reload PATH
         run: source ~/.profile && source ~/.bash_profile && solana --version
       - name: Install dependencies
-        run: npm i -g @project-serum/anchor-cli && anchor --version && npm install
+        run: npm i -g @project-serum/anchor-cli && npm install
+      - name: Test Anchor
+        run: pwd && cd .. && anchor --version && anchor init test-anchor
       - name: Build the program and library
         run: anchor build && npm run build
       - name: Publish the package
