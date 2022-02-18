@@ -25,6 +25,7 @@ jobs:
         run: sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
       - name: Reload PATH
         run: |
+          source ~/.profile && source ~/.bash_profile
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           solana --version
       - name: Install dependencies
