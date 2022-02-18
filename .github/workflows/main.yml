@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: npm i -g @project-serum/anchor-cli && npm install
       - name: Test Anchor
-        run: pwd && cd .. && anchor --version && anchor init test-anchor
+        run: cargo search build-bpf && solana-keygen new
       - name: Build the program and library
         run: anchor build && npm run build
       - name: Publish the package
