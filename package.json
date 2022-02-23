@@ -1,7 +1,10 @@
 {
   "name": "@project-kylan/core",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "main": "dist/lib/index.js",
+  "files": [
+    "/dist"
+  ],
   "scripts": {
     "start": "nodemon lib/index.ts",
     "build": "npm run clean && tsc",
