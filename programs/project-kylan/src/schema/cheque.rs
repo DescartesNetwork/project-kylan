@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 pub struct Cheque {
-  pub amount: u64,
+  pub amount: u64, // KUSD
   pub printer: Pubkey,
   pub secure_token: Pubkey,
   pub authority: Pubkey,

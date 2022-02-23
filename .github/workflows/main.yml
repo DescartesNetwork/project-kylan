@@ -37,7 +37,7 @@ jobs:
           anchor build
           npm run build
       - name: Publish the package
-        run: npm publish --access=public
+        run: ls ./dist && npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Deploy docs to gh-pages branch
