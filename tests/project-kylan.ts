@@ -339,12 +339,10 @@ describe('project-kylan', () => {
           rent: web3.SYSVAR_RENT_PUBKEY,
         },
       })
-    } catch (er) {
-      const errors = kylanProgram.idl.errors.map(
-        ({ code, msg }) => `${code}: ${msg}`,
-      )
-      if (!errors.includes(er.message))
-        throw new Error('The function checks are by-passed')
+    } catch ({ logs }) {
+      let ok = false
+      logs.forEach((log) => (ok = ok || log.includes('NotBurnable')))
+      if (!ok) throw new Error('The function checks are by-passed')
     }
   })
 

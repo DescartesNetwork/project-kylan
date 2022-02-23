@@ -40,9 +40,9 @@ pub struct Print<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn exec(ctx: Context<Print>, amount: u64) -> ProgramResult {
+pub fn exec(ctx: Context<Print>, amount: u64) -> Result<()> {
   if !ctx.accounts.cert.is_printable() {
-    return Err(ErrorCode::NotPrintable.into());
+    return Err(error!(ErrorCode::NotPrintable));
   }
   // Stake secure tokens
   let transfer_ctx = CpiContext::new(

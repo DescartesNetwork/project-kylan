@@ -27,7 +27,7 @@ pub struct InitializeCheque<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn exec(ctx: Context<InitializeCheque>) -> ProgramResult {
+pub fn exec(ctx: Context<InitializeCheque>) -> Result<()> {
   let cheque = &mut ctx.accounts.cheque;
   cheque.amount = 0;
   cheque.printer = ctx.accounts.printer.key();

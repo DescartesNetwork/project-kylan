@@ -36,7 +36,7 @@ pub struct InitializeCert<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn exec(ctx: Context<InitializeCert>, price: u64, fee: u64) -> ProgramResult {
+pub fn exec(ctx: Context<InitializeCert>, price: u64, fee: u64) -> Result<()> {
   let cert = &mut ctx.accounts.cert;
   cert.printer = ctx.accounts.printer.key();
   cert.secure_token = ctx.accounts.secure_token.key();

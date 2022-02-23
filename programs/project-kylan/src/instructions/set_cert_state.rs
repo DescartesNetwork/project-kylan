@@ -15,10 +15,10 @@ pub struct SetCertState<'info> {
   pub cert: Account<'info, Cert>,
 }
 
-pub fn exec(ctx: Context<SetCertState>, state: CertState) -> ProgramResult {
+pub fn exec(ctx: Context<SetCertState>, state: CertState) -> Result<()> {
   let cert = &mut ctx.accounts.cert;
   if state == CertState::Uninitialized {
-    return Err(ErrorCode::UninitializedCert.into());
+    return Err(error!(ErrorCode::UninitializedCert));
   }
   cert.state = state;
   Ok(())

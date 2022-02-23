@@ -14,7 +14,7 @@ pub struct SetCertFee<'info> {
   pub cert: Account<'info, Cert>,
 }
 
-pub fn exec(ctx: Context<SetCertFee>, fee: u64) -> ProgramResult {
+pub fn exec(ctx: Context<SetCertFee>, fee: u64) -> Result<()> {
   let cert = &mut ctx.accounts.cert;
   cert.fee = fee;
   Ok(())

@@ -26,7 +26,7 @@ pub struct SetCertTaxman<'info> {
   pub system_program: Program<'info, System>,
 }
 
-pub fn exec(ctx: Context<SetCertTaxman>) -> ProgramResult {
+pub fn exec(ctx: Context<SetCertTaxman>) -> Result<()> {
   let cert = &mut ctx.accounts.cert;
   cert.taxman = ctx.accounts.taxman.key();
   Ok(())

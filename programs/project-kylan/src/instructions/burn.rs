@@ -37,9 +37,9 @@ pub struct Burn<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn exec(ctx: Context<Burn>, amount: u64) -> ProgramResult {
+pub fn exec(ctx: Context<Burn>, amount: u64) -> Result<()> {
   if !ctx.accounts.cert.is_burnable() {
-    return Err(ErrorCode::NotBurnable.into());
+    return Err(error!(ErrorCode::NotBurnable));
   }
   // Burn stable tokens
   let burn_ctx = CpiContext::new(
