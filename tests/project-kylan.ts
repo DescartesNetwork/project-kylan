@@ -339,10 +339,9 @@ describe('project-kylan', () => {
           rent: web3.SYSVAR_RENT_PUBKEY,
         },
       })
-    } catch ({ logs }) {
-      let ok = false
-      logs.forEach((log) => (ok = ok || log.includes('NotBurnable')))
-      if (!ok) throw new Error('The function checks are by-passed')
+    } catch ({ msg }) {
+      if (msg !== "The token isn't available to burn")
+        throw new Error('The function checks are by-passed')
     }
   })
 

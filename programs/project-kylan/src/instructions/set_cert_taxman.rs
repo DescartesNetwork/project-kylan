@@ -19,6 +19,7 @@ pub struct SetCertTaxman<'info> {
     associated_token::authority = taxman_authority
   )]
   pub taxman: Account<'info, token::TokenAccount>,
+  /// CHECK: Just a pure account
   pub taxman_authority: AccountInfo<'info>,
   pub token_program: Program<'info, token::Token>,
   pub associated_token_program: Program<'info, associated_token::AssociatedToken>,

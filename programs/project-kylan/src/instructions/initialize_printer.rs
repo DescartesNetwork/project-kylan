@@ -15,6 +15,7 @@ pub struct InitializeStableToken<'info> {
   #[account(mut)]
   pub authority: Signer<'info>,
   #[account(seeds = [&stable_token.key().to_bytes()], bump)]
+  /// CHECK: Just a pure account
   pub treasurer: AccountInfo<'info>,
   #[account(init, payer = authority, space = printer::Printer::LEN)]
   pub printer: Account<'info, printer::Printer>,

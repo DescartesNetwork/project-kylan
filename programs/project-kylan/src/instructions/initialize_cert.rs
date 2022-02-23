@@ -29,6 +29,7 @@ pub struct InitializeCert<'info> {
     associated_token::authority = taxman_authority
   )]
   pub taxman: Account<'info, token::TokenAccount>,
+  /// CHECK: Just a pure account
   pub taxman_authority: AccountInfo<'info>,
   pub system_program: Program<'info, System>,
   pub token_program: Program<'info, token::Token>,

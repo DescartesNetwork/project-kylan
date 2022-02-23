@@ -7,28 +7,29 @@ use anchor_spl::{associated_token, token};
 pub struct Burn<'info> {
   #[account(mut)]
   pub stable_token: Account<'info, token::Mint>,
-  pub secure_token: Account<'info, token::Mint>,
+  pub secure_token: Box<Account<'info, token::Mint>>,
   #[account(mut)]
   pub authority: Signer<'info>,
   #[account(seeds = [&stable_token.key().to_bytes()], bump)]
+  /// CHECK: Just a pure account
   pub treasurer: AccountInfo<'info>,
   #[account(mut)]
-  pub treasury: Account<'info, token::TokenAccount>,
+  pub treasury: Box<Account<'info, token::TokenAccount>>,
   #[account(mut)]
-  pub src_associated_token_account: AccountInfo<'info>,
+  pub src_associated_token_account: Box<Account<'info, token::TokenAccount>>,
   #[account(
     init_if_needed,
     payer = authority,
     associated_token::mint = secure_token,
     associated_token::authority = authority
   )]
-  pub dst_associated_token_account: Account<'info, token::TokenAccount>,
+  pub dst_associated_token_account: Box<Account<'info, token::TokenAccount>>,
   #[account(has_one = stable_token)]
   pub printer: Box<Account<'info, Printer>>,
   #[account(has_one = printer, has_one = secure_token, has_one = taxman)]
   pub cert: Box<Account<'info, Cert>>,
   #[account(mut, has_one = printer, has_one = secure_token, has_one = authority)]
-  pub cheque: Box<Account<'info, Cheque>>,
+  pub cheque: Account<'info, Cheque>,
   #[account(mut)]
   pub taxman: Box<Account<'info, token::TokenAccount>>,
   pub system_program: Program<'info, System>,
