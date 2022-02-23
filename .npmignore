@@ -1,5 +1,5 @@
 /node_modules
 .npmrc
-test-ledger
 .anchor
 .github
+/target

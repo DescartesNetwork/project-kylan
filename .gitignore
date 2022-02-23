@@ -3,6 +3,5 @@ node_modules
 .DS_Store
 target
 **/*.rs.bk
-test-ledger
 dist
 docs
