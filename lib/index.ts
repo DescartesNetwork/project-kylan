@@ -1,12 +1,6 @@
-import {
-  web3,
-  Program,
-  Provider,
-  Wallet,
-  utils,
-  BN,
-} from '@project-serum/anchor'
+import { web3, Program, Provider, utils, BN } from '@project-serum/anchor'
 import { TypeDef } from '@project-serum/anchor/dist/cjs/program/namespace/types'
+import { Wallet } from '@project-serum/anchor/dist/cjs/provider'
 import { ProjectKylan } from '../target/types/project_kylan'
 
 import {
