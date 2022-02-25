@@ -10,6 +10,8 @@ import {
 } from './constant'
 import { findCert, findCheque, isAddress } from './utils'
 
+export type AnchorWallet = Wallet
+
 export type PrinterData = TypeDef<ProjectKylan['accounts'][2], ProjectKylan>
 export type CertData = TypeDef<ProjectKylan['accounts'][0], ProjectKylan>
 export type ChequeData = TypeDef<ProjectKylan['accounts'][1], ProjectKylan>
@@ -33,7 +35,7 @@ class Kylan {
   readonly program: Program<ProjectKylan>
 
   constructor(
-    wallet: Wallet,
+    wallet: AnchorWallet,
     rpcEndpoint: string = DEFAULT_RPC_ENDPOINT,
     programId: string = DEFAULT_KYLAN_PROGRAM_ID,
   ) {

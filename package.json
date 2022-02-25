@@ -1,6 +1,6 @@
 {
   "name": "@project-kylan/core",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "main": "dist/lib/index.js",
   "scripts": {
     "start": "nodemon lib/index.ts",
