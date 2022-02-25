@@ -1,13 +1,13 @@
 {
   "name": "@project-kylan/core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "main": "dist/lib/index.js",
   "scripts": {
     "start": "nodemon lib/index.ts",
     "build": "npm run clean && tsc",
     "clean": "rm -rf ./dist",
     "predeploy": "typedoc --excludePrivate --excludeProtected ./lib/index.ts",
-    "deploy": "gh-pages -d docs",
+    "deploy": "echo docs.kylan.so >> ./docs/CNAME && gh-pages -d docs",
     "test": "npm run build && mocha --require ts-node/register -t 120000 lib-test/**/*.test.ts"
   },
   "author": "Tu Phan <tuphan@descartes.network>",
