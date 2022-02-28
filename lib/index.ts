@@ -12,6 +12,12 @@ import { findCert, findCheque, isAddress } from './utils'
 
 export type AnchorWallet = Wallet
 
+export type KylanAccountChangeInfo = {
+  type: 'printer' | 'cert' | 'cheque'
+  address: string
+  data: Buffer
+}
+
 export type PrinterData = TypeDef<ProjectKylan['accounts'][2], ProjectKylan>
 export type CertData = TypeDef<ProjectKylan['accounts'][0], ProjectKylan>
 export type ChequeData = TypeDef<ProjectKylan['accounts'][1], ProjectKylan>
@@ -55,6 +61,69 @@ class Kylan {
   }
 
   /**
+   * Watch account changes
+   * @param callback
+   * @param filters
+   * @returns Watch id
+   */
+  watch = (
+    callback: (
+      error: string | null,
+      data:
+        | (Omit<KylanAccountChangeInfo, 'data'> & {
+            data: PrinterData | CertData | ChequeData
+          })
+        | null,
+    ) => void,
+    filters?: web3.GetProgramAccountsFilter[],
+  ): number => {
+    const cb = ({
+      accountId,
+      accountInfo: { data: buf },
+    }: web3.KeyedAccountInfo) => {
+      const address = accountId.toBase58()
+      let type = null
+      let data = {}
+      if (buf.length === this.program.account.printer.size) {
+        type = 'printer'
+        data = this.parsePrinterData(buf)
+      }
+      if (buf.length === this.program.account.cert.size) {
+        type = 'cert'
+        data = this.parseCertData(buf)
+      }
+      if (buf.length === this.program.account.cheque.size) {
+        type = 'cheque'
+        data = this.parseChequeData(buf)
+      }
+      if (!type) return callback('Unmatched type', null)
+      return callback(null, {
+        type: type as KylanAccountChangeInfo['type'],
+        address,
+        data: data as PrinterData | CertData | ChequeData,
+      })
+    }
+    return this.program.provider.connection.onProgramAccountChange(
+      this.program.programId,
+      cb,
+      'confirmed',
+      filters,
+    )
+  }
+
+  /**
+   * Unwatch a watcher by watch id
+   * @param watchId
+   * @returns
+   */
+  unwatch = async (watchId: number): Promise<void> => {
+    if (!watchId) return
+    return await this.program.provider.connection.removeProgramAccountChangeListener(
+      watchId,
+    )
+  }
+
+  /**
    * Parse printer buffer data.
    * @param data Printer buffer data.
    * @returns Printer readable data.
@@ -78,7 +147,7 @@ class Kylan {
    * @returns Certficate readable data.
    */
   parseCertData = (data: Buffer): CertData => {
-    return this.program.coder.accounts.decode('cert', data)
+    return this.program.coder.accounts.decode('Cert', data)
   }
 
   /**
