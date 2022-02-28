@@ -165,7 +165,7 @@ class Kylan {
    * @returns Cheque readable data.
    */
   parseChequeData = (data: Buffer): ChequeData => {
-    return this.program.coder.accounts.decode('cheque', data)
+    return this.program.coder.accounts.decode('Cheque', data)
   }
 
   /**
