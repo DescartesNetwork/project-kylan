@@ -77,7 +77,7 @@ class Kylan {
    * @param data Certificate buffer data.
    * @returns Certficate readable data.
    */
-  parseCertData = (data: Buffer): PrinterData => {
+  parseCertData = (data: Buffer): CertData => {
     return this.program.coder.accounts.decode('cert', data)
   }
 
