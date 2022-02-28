@@ -311,14 +311,16 @@ class Kylan {
 
   /**
    * Create a certificate that allows the printer could print/burn a new secure token.
-   * The ratio between the stable and secure token is defined by price.
-   * 1 stable token = $1 = price / 10^6 * 1 secure_token
-   * For example, if one secure token worths $0.75, then
-   * 1 Stable Token = 1,333,333 / 1,000,000 * 0.75 so price = 1,333,333
+   * The ratio between the secure and stable token is defined by rate.
+   * 1 stable_token (in decimals) = 1 secure_token (in decimals) * rate / 10^6
+   *
+   * rate = price_of_secure_token * 10^(12 - secure_token_decimals)
+   * (This formula is hard set to stable with decimals 6)
+   *
    * @param printerAddress Printer address.
    * @param secureTokenAddress Secure token address.
    * @param taxmanAuthorityAddress Taxman authority (owner) address.
-   * @param price Secure token price with decimals 6.
+   * @param rate Secure token rate with decimals 6.
    * @param fee Burning Fee. Default is 5000 with decimals 6 (0.5%).
    * @returns { txId, certAddress }
    */
@@ -326,7 +328,7 @@ class Kylan {
     printerAddress: string,
     secureTokenAddress: string,
     taxmanAuthorityAddress: string,
-    price: BN,
+    rate: BN,
     fee: BN = new BN(5000),
   ) => {
     if (!isAddress(secureTokenAddress))
@@ -334,8 +336,8 @@ class Kylan {
     if (!isAddress(printerAddress)) throw new Error('Invalid printer address')
     if (!isAddress(taxmanAuthorityAddress))
       throw new Error('Invalid taxman authority address')
-    if (price.isZero() || price.isNeg())
-      throw new Error('The price should be greater than zero')
+    if (rate.isZero() || rate.isNeg())
+      throw new Error('The rate should be greater than zero')
     if (fee.isNeg()) throw new Error('The fee should not be negative')
     const { stableToken: stableTokenPublicKey } = await this.getPrinterData(
       printerAddress,
@@ -348,7 +350,7 @@ class Kylan {
       mint: new web3.PublicKey(secureTokenAddress),
       owner: new web3.PublicKey(taxmanAuthorityAddress),
     })
-    const txId = await this.program.rpc.initializeCert(price, fee, {
+    const txId = await this.program.rpc.initializeCert(rate, fee, {
       accounts: {
         stableToken: stableTokenPublicKey,
         secureToken: new web3.PublicKey(secureTokenAddress),

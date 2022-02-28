@@ -20,13 +20,13 @@ impl Default for CertState {
 }
 
 /**
- * 1 stable_token = price / 10**6 * 1 secure_token
+ * 1 stable_token (in decimals) = 1 secure_token (in decimals) * rate / 10^6
  */
 #[account]
 pub struct Cert {
   pub printer: Pubkey,
   pub secure_token: Pubkey,
-  pub price: u64,     // decimals 6
+  pub rate: u64,      // decimals 6
   pub fee: u64,       // decimals 6
   pub taxman: Pubkey, // Associated account of the secure token for taxman
   pub state: CertState,
@@ -55,7 +55,7 @@ impl Cert {
   pub fn printable_amount(&self, staked_amount: u64) -> Option<u64> {
     return staked_amount
       .to_u128()?
-      .checked_mul(self.price.to_u128()?)?
+      .checked_mul(self.rate.to_u128()?)?
       .checked_div(Cert::PRECISION.to_u128()?)?
       .to_u64();
   }
@@ -64,7 +64,7 @@ impl Cert {
     let amount = unstaked_amount
       .to_u128()?
       .checked_mul(Cert::PRECISION)?
-      .checked_div(self.price.to_u128()?)?
+      .checked_div(self.rate.to_u128()?)?
       .to_u64()?;
     let chargeable = amount
       .to_u128()?

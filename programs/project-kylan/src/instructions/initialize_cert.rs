@@ -37,11 +37,11 @@ pub struct InitializeCert<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn exec(ctx: Context<InitializeCert>, price: u64, fee: u64) -> Result<()> {
+pub fn exec(ctx: Context<InitializeCert>, rate: u64, fee: u64) -> Result<()> {
   let cert = &mut ctx.accounts.cert;
   cert.printer = ctx.accounts.printer.key();
   cert.secure_token = ctx.accounts.secure_token.key();
-  cert.price = price;
+  cert.rate = rate;
   cert.fee = fee;
   cert.taxman = ctx.accounts.taxman.key();
   cert.state = CertState::Active;

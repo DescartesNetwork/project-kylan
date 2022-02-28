@@ -17,7 +17,7 @@ import {
   findCheque,
 } from './pretest'
 
-const PRICE = new BN(100_000)
+const RATE = new BN(100_000)
 const FEE = new BN(5_000)
 
 // https://github.com/project-serum/anchor/issues/1126
@@ -125,7 +125,7 @@ describe('project-kylan', () => {
   })
 
   it('initialize a cert', async () => {
-    await kylanProgram.rpc.initializeCert(PRICE, FEE, {
+    await kylanProgram.rpc.initializeCert(RATE, FEE, {
       accounts: {
         stableToken: stableToken.publicKey,
         secureToken: secureToken.publicKey,

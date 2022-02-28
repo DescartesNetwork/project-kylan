@@ -7,7 +7,7 @@ pub use schema::*;
 pub mod instructions;
 pub use instructions::*;
 
-declare_id!("57bCSmBzSiVyZEDb8n8W33tyxAcqDCcVnkb1eJ2jfnmP");
+declare_id!("BtWSjF2dpLAPLbCJjyXLZJJPaWbZhpyT2Z8A2yg5Aozj");
 
 #[program]
 mod project_kylan {
@@ -17,8 +17,8 @@ mod project_kylan {
     initialize_printer::exec(ctx, decimals)
   }
 
-  pub fn initialize_cert(ctx: Context<InitializeCert>, price: u64, fee: u64) -> Result<()> {
-    initialize_cert::exec(ctx, price, fee)
+  pub fn initialize_cert(ctx: Context<InitializeCert>, rate: u64, fee: u64) -> Result<()> {
+    initialize_cert::exec(ctx, rate, fee)
   }
 
   pub fn initialize_cheque(ctx: Context<InitializeCheque>) -> Result<()> {

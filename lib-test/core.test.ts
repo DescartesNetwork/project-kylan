@@ -17,7 +17,7 @@ const PRIV_KEY_FOR_TEST_ONLY = Buffer.from([
   25, 127, 150, 87, 141, 234, 34, 239, 139, 107, 155, 32, 47, 199,
 ])
 const PRECISION = new BN(1_000_000)
-const PRICE = new BN(1_000_000)
+const RATE = new BN(1_000_000)
 const FEE = new BN(2_500)
 
 describe('@project-kylan/core', function () {
@@ -113,7 +113,7 @@ describe('@project-kylan/core', function () {
       printerAddress,
       secureTokenAddress,
       taxmanAuthorityAddress,
-      PRICE,
+      RATE,
       FEE,
     )
   })
