@@ -8,7 +8,6 @@ pub struct InitializeCheque<'info> {
   pub secure_token: Account<'info, token::Mint>,
   #[account(mut)]
   pub authority: Signer<'info>,
-  #[account(has_one = authority)]
   pub printer: Account<'info, Printer>,
   #[account(
     init,
