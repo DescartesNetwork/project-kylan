@@ -47,6 +47,9 @@ describe('project-kylan', () => {
     secureAssociatedTokenAccount: web3.PublicKey,
     taxmanAuthority: web3.Keypair = web3.Keypair.generate(),
     taxman: web3.PublicKey
+
+  console.log(kylanProgram)
+
   before(async () => {
     cert = await findCert(
       printer.publicKey,

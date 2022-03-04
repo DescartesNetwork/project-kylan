@@ -13,7 +13,7 @@ declare_id!("BtWSjF2dpLAPLbCJjyXLZJJPaWbZhpyT2Z8A2yg5Aozj");
 mod project_kylan {
   use super::*;
 
-  pub fn initialize_printer(ctx: Context<InitializeStableToken>, decimals: u8) -> Result<()> {
+  pub fn initialize_printer(ctx: Context<InitializePrinter>, decimals: u8) -> Result<()> {
     initialize_printer::exec(ctx, decimals)
   }
 

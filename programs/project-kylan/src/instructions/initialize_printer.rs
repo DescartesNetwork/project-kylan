@@ -4,7 +4,7 @@ use crate::schema::printer;
 
 #[derive(Accounts)]
 #[instruction(_decimals: u8)]
-pub struct InitializeStableToken<'info> {
+pub struct InitializePrinter<'info> {
   #[account(
     init, 
     payer = authority,
@@ -24,7 +24,7 @@ pub struct InitializeStableToken<'info> {
   pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn exec(ctx: Context<InitializeStableToken>, _decimals: u8) -> Result<()> {
+pub fn exec(ctx: Context<InitializePrinter>, _decimals: u8) -> Result<()> {
   let printer = &mut ctx.accounts.printer;
   printer.stable_token = ctx.accounts.stable_token.key();
   printer.authority = ctx.accounts.authority.key();
