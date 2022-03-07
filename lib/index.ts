@@ -625,6 +625,25 @@ class Kylan {
     })
     return { txId }
   }
+
+  /**
+   * Transfer the printer authority
+   * @param newAuthority The new taxman authority (the function will auto derive the taxman account for the authority).
+   * @param certAddress Certificate address.
+   * @returns { txId }
+   */
+  transferAuthority = async (newAuthority: string, printerAddress: string) => {
+    if (!isAddress(newAuthority)) throw new Error('Invalid authority address')
+    if (!isAddress(printerAddress)) throw new Error('Invalid printer address')
+    const txId = await this.program.rpc.transferAuthority({
+      accounts: {
+        authority: this.program.provider.wallet.publicKey,
+        newAuthority: new web3.PublicKey(newAuthority),
+        printer: new web3.PublicKey(printerAddress),
+      },
+    })
+    return { txId }
+  }
 }
 
 export * from '../target/types/project_kylan'

@@ -17,3 +17,5 @@ pub mod set_cert_fee;
 pub use set_cert_fee::*;
 pub mod set_cert_taxman;
 pub use set_cert_taxman::*;
+pub mod transfer_authority;
+pub use transfer_authority::*;

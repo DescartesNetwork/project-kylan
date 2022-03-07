@@ -220,4 +220,12 @@ describe('@project-kylan/core', function () {
     if (newTaxman.toBase58() !== taxman.toBase58())
       throw new Error('Cannot update cert taxman')
   })
+
+  it('transfer authority', async () => {
+    const newAuthorityAddress = web3.Keypair.generate().publicKey.toBase58()
+    await kylan.transferAuthority(newAuthorityAddress, printerAddress)
+    const { authority } = await kylan.getPrinterData(printerAddress)
+    if (authority.toBase58() !== newAuthorityAddress)
+      throw new Error('Cannot update new authority')
+  })
 })

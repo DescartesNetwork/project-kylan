@@ -48,8 +48,6 @@ describe('project-kylan', () => {
     taxmanAuthority: web3.Keypair = web3.Keypair.generate(),
     taxman: web3.PublicKey
 
-  console.log(kylanProgram)
-
   before(async () => {
     cert = await findCert(
       printer.publicKey,
@@ -387,5 +385,21 @@ describe('project-kylan', () => {
     const { taxman } = await kylanProgram.account.cert.fetch(cert)
     if (taxman.toBase58() !== newTaxman.toBase58())
       throw new Error('Cannot update cert taxman')
+  })
+
+  it('transfer authority', async () => {
+    const newAuthority = web3.Keypair.generate().publicKey
+    await kylanProgram.rpc.transferAuthority({
+      accounts: {
+        authority: provider.wallet.publicKey,
+        newAuthority,
+        printer: printer.publicKey,
+      },
+    })
+    const { authority } = await kylanProgram.account.printer.fetch(
+      printer.publicKey,
+    )
+    if (authority.toBase58() !== newAuthority.toBase58())
+      throw new Error('Cannot update new authority')
   })
 })

@@ -44,4 +44,8 @@ mod project_kylan {
   pub fn set_cert_taxman(ctx: Context<SetCertTaxman>) -> Result<()> {
     set_cert_taxman::exec(ctx)
   }
+
+  pub fn transfer_authority(ctx: Context<TransferAuthority>) -> Result<()> {
+    transfer_authority::exec(ctx)
+  }
 }
